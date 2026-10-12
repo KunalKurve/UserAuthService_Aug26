@@ -12,4 +12,7 @@ public interface IAuthService {
     User makeAdmin(String email, String password);
 
     boolean validateToken(String token);
+
+    User registerSeller(String username, String email, String password);
+
 }

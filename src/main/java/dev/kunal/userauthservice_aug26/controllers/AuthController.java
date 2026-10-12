@@ -65,6 +65,18 @@ public class AuthController {
         return new ResponseEntity<>(convertToUserDto(user), HttpStatus.ACCEPTED);
     }
 
+    @PostMapping("/registerSeller")
+    public ResponseEntity<UserDto> registerSeller(@RequestBody SignupRequestDto signupRequestDto) {
+
+        User user = authService.registerSeller(
+                signupRequestDto.getUsername(),
+                signupRequestDto.getEmail(),
+                signupRequestDto.getPassword()
+        );
+
+        return new ResponseEntity<>(convertToUserDto(user), HttpStatus.CREATED);
+    }
+
     @PostMapping("/validateToken")
     public ResponseEntity<Boolean> validateToken(@RequestBody ValidateTokenRequestDto validateTokenRequestDto) {
 

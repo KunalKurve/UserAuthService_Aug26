@@ -172,4 +172,30 @@ public class AuthService implements IAuthService{
 
         return true;
     }
+
+    @Override
+    public User registerSeller(String username, String email, String password) {
+
+        Optional<User> userOptional = userRepository.findUserByEmail(email);
+        if(userOptional.isPresent()) {
+            throw new UserAlreadyExistsException("Seller with email " + email + " already exists");
+        }
+
+        User user = new User();
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+        Optional<Role> roleOptional = roleRepository.findByValue("SELLER");
+        if (roleOptional.isEmpty()) {
+            Role role = new Role();
+            role.setValue("SELLER");
+            roleRepository.save(role);
+            user.setRole(List.of(role));
+        } else {
+            user.setRole(List.of(roleOptional.get()));
+        }
+
+        return userRepository.save(user);
+    }
+
 }
