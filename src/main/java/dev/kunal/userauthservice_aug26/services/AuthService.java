@@ -1,5 +1,9 @@
 package dev.kunal.userauthservice_aug26.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.kunal.userauthservice_aug26.clients.KafkaProducerClient;
+import dev.kunal.userauthservice_aug26.dtos.EmailDto;
 import dev.kunal.userauthservice_aug26.exceptions.InvalidCredentialsException;
 import dev.kunal.userauthservice_aug26.exceptions.UserAlreadyExistsException;
 import dev.kunal.userauthservice_aug26.exceptions.UserNotFoundException;
@@ -39,6 +43,12 @@ public class AuthService implements IAuthService{
     @Autowired
     private SecretKey secretKey;
 
+    @Autowired
+    private KafkaProducerClient kafkaProducerClient;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Override
     public User signup(String username, String email, String password) {
 
@@ -60,6 +70,25 @@ public class AuthService implements IAuthService{
         } else {
             user.setRole(List.of(roleOptional.get()));
         }
+
+        // Put message into the Message Queue (Kafka)
+        EmailDto emailDto = new EmailDto();
+        emailDto.setTo(email);
+        emailDto.setFrom("kunalAtScaler2025@gmail.com");
+        emailDto.setSubject("Welcome to Scaler!");
+        emailDto.setBody("Hey " + username + " Have a Good Learning Experience!");
+
+        //because I can only pass a String, I needed ObjectMapper from Jackson to convert
+        //emailDto to String
+        try {
+            String message = objectMapper.writeValueAsString(emailDto);
+            // Developer has to decide the Topic name and use the same name while consuming
+            kafkaProducerClient.sendMessage("signup", message);
+
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+        //////////////////////////////////////////////
 
         return userRepository.save(user);
     }
